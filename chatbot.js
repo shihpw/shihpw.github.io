@@ -1,131 +1,58 @@
-const pobotResponses = {
-  greeting: [
-    "Hello, I’m Pobot — a Product Experience Definition and Systems assistant. I help clarify what a product is, what it does, what assumptions it carries, and where intent differs from behaviour.",
-    "Hi. I’m Pobot. I can help you think through product definition, assumptions, constraints, feedback, and behaviour."
-  ],
-
-  definition: [
-    "Before optimising, define the product. What is it, who is it for, what behaviour should it create, and what would success look like?",
-    "Let’s clarify the product first: what should exist, how should it behave, and what problem is it meant to resolve?"
-  ],
-
-  assumptions: [
-    "What assumption is being made here? What would prove it wrong?",
-    "That sounds like an assumption. Is it based on evidence, observation, or expectation?"
-  ],
-
-  constraints: [
-    "What constraint is shaping the behaviour: technical, physical, organisational, business, or user-context?",
-    "A constraint is not just a limitation. It reveals what the system currently values. Which constraint is driving the decision?"
-  ],
-
-  behaviour: [
-    "Compare intent with behaviour. What was supposed to happen, and what actually happens?",
-    "Users experience behaviour, not intention. What does the product actually do in use?"
-  ],
-
-  feedback: [
-    "What feedback does the system give the user? Is it accurate, timely, and connected to the real system state?",
-    "If users do not understand what is happening, the feedback loop may be broken."
-  ],
-
-  evidence: [
-    "What evidence do you have? Observation, measurement, user feedback, implementation detail, or assumption?",
-    "Evidence clarifies reality. Without it, we may be debating intention rather than behaviour."
-  ],
-
-  fallback: [
-    "I can help with product definition, assumptions, constraints, feedback, evidence, and intent-versus-behaviour gaps. Try asking: “What are we assuming?” or “Why does this behave differently than intended?”",
-    "I do not answer private career, employer, or confidential project questions. I can help reformulate the question as a public-safe product experience problem."
-  ]
+const pobotState = {
+  mode: null,
+  step: 0,
+  answers: {}
 };
 
-function getRandomResponse(category) {
-  const responses = pobotResponses[category] || pobotResponses.fallback;
-  return responses[Math.floor(Math.random() * responses.length)];
-}
+const workflows = {
+  definition: {
+    title: "Product Definition Canvas",
+    steps: [
+      { key: "product", question: "What is the product, feature, or experience you want to define?" },
+      { key: "user", question: "Who is it for? Be specific about the user, context, or situation." },
+      { key: "problem", question: "What problem, tension, or unmet need does it address?" },
+      { key: "behaviour", question: "If it succeeds, what user behaviour or system behaviour should change?" },
+      { key: "constraints", question: "What constraints matter most: technical, physical, organisational, cost, time, or user-context?" },
+      { key: "success", question: "What would success look like? What evidence would show it is working?" }
+    ]
+  },
 
-function getPobotResponse(input) {
-  const message = input.toLowerCase();
+  audit: {
+    title: "Intent vs Behaviour Audit",
+    steps: [
+      { key: "intent", question: "What was the product, feature, or interaction intended to do?" },
+      { key: "observed", question: "What is actually happening in use?" },
+      { key: "gap", question: "Where is the gap between intended behaviour and actual behaviour?" },
+      { key: "evidence", question: "What evidence do you have: observation, user feedback, data, test result, or implementation detail?" },
+      { key: "cause", question: "What might be causing the gap: unclear definition, wrong assumption, hidden constraint, weak feedback, or technical limitation?" }
+    ]
+  },
 
-  if (
-    message.includes("hello") ||
-    message.includes("hi") ||
-    message.includes("hey") ||
-    message.includes("start")
-  ) {
-    return getRandomResponse("greeting");
+  assumption: {
+    title: "Assumption Extractor",
+    steps: [
+      { key: "claim", question: "Write the belief or assumption you want to test. For example: “Users will understand this intuitively.”" },
+      { key: "basis", question: "What is this based on: evidence, experience, stakeholder belief, user research, or guess?" },
+      { key: "risk", question: "What breaks if this assumption is wrong?" },
+      { key: "test", question: "What is the smallest way to test or observe whether this assumption is true?" },
+      { key: "decision", question: "What decision depends on this assumption?" }
+    ]
   }
+};
 
-  if (
-    message.includes("what is this product") ||
-    message.includes("define") ||
-    message.includes("definition") ||
-    message.includes("product intent") ||
-    message.includes("what should exist")
-  ) {
-    return getRandomResponse("definition");
-  }
+const quickResponses = {
+  greeting:
+    "Hello, I’m Pobot. I help with product definition, assumptions, constraints, feedback, evidence, and intent-versus-behaviour gaps. Type “definition”, “audit”, or “assumption” to start.",
 
-  if (
-    message.includes("assume") ||
-    message.includes("assumption") ||
-    message.includes("guess") ||
-    message.includes("believe") ||
-    message.includes("we think")
-  ) {
-    return getRandomResponse("assumptions");
-  }
+  help:
+    "Choose one workflow:\n\n1. Type “definition” for Product Definition Canvas\n2. Type “audit” for Intent vs Behaviour Audit\n3. Type “assumption” for Assumption Extractor\n\nYou can type “reset” anytime to start again.",
 
-  if (
-    message.includes("constraint") ||
-    message.includes("limit") ||
-    message.includes("limitation") ||
-    message.includes("technical") ||
-    message.includes("manufacturing") ||
-    message.includes("timeline") ||
-    message.includes("cost")
-  ) {
-    return getRandomResponse("constraints");
-  }
+  boundary:
+    "I can’t discuss private career details, employer/client information, confidential projects, or unverified claims. I can help reformulate this as a public-safe product experience question.",
 
-  if (
-    message.includes("intended") ||
-    message.includes("supposed") ||
-    message.includes("actually") ||
-    message.includes("behaviour") ||
-    message.includes("behavior") ||
-    message.includes("doesn't work") ||
-    message.includes("not working") ||
-    message.includes("confusing")
-  ) {
-    return getRandomResponse("behaviour");
-  }
-
-  if (
-    message.includes("feedback") ||
-    message.includes("response") ||
-    message.includes("state") ||
-    message.includes("status") ||
-    message.includes("latency") ||
-    message.includes("delay")
-  ) {
-    return getRandomResponse("feedback");
-  }
-
-  if (
-    message.includes("evidence") ||
-    message.includes("proof") ||
-    message.includes("prove") ||
-    message.includes("measure") ||
-    message.includes("observation") ||
-    message.includes("data")
-  ) {
-    return getRandomResponse("evidence");
-  }
-
-  return getRandomResponse("fallback");
-}
+  fallback:
+    "I work best as a guided tool. Type “definition”, “audit”, or “assumption” to start. Type “help” to see options."
+};
 
 function addMessage(text, sender) {
   const chatBox = document.getElementById("chat-box");
@@ -136,6 +63,193 @@ function addMessage(text, sender) {
 
   chatBox.appendChild(messageElement);
   chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function resetPobot() {
+  pobotState.mode = null;
+  pobotState.step = 0;
+  pobotState.answers = {};
+}
+
+function startWorkflow(mode) {
+  resetPobot();
+  pobotState.mode = mode;
+
+  const workflow = workflows[mode];
+  return `${workflow.title}\n\n${workflow.steps[0].question}`;
+}
+
+function continueWorkflow(userMessage) {
+  const workflow = workflows[pobotState.mode];
+  const currentStep = workflow.steps[pobotState.step];
+
+  pobotState.answers[currentStep.key] = userMessage;
+  pobotState.step += 1;
+
+  if (pobotState.step < workflow.steps.length) {
+    return workflow.steps[pobotState.step].question;
+  }
+
+  const summary = generateSummary(pobotState.mode, pobotState.answers);
+  resetPobot();
+  return summary;
+}
+
+function generateSummary(mode, answers) {
+  if (mode === "definition") {
+    return `PRODUCT DEFINITION CANVAS
+
+Product:
+${answers.product}
+
+User / Context:
+${answers.user}
+
+Problem:
+${answers.problem}
+
+Desired Behaviour Change:
+${answers.behaviour}
+
+Key Constraints:
+${answers.constraints}
+
+Success Evidence:
+${answers.success}
+
+Pobot reflection:
+Before optimising this product, check whether the definition is coherent: product, user, problem, intended behaviour, constraints, and evidence should point in the same direction.`;
+  }
+
+  if (mode === "audit") {
+    return `INTENT VS BEHAVIOUR AUDIT
+
+Intended Behaviour:
+${answers.intent}
+
+Observed Behaviour:
+${answers.observed}
+
+Gap:
+${answers.gap}
+
+Evidence:
+${answers.evidence}
+
+Possible Cause:
+${answers.cause}
+
+Pobot reflection:
+Users experience behaviour, not intent. The next useful question is: what would need to change in definition, feedback, constraint, or implementation for observed behaviour to match intended behaviour?`;
+  }
+
+  if (mode === "assumption") {
+    return `ASSUMPTION EXTRACTOR
+
+Assumption:
+${answers.claim}
+
+Basis:
+${answers.basis}
+
+Risk if Wrong:
+${answers.risk}
+
+Smallest Test:
+${answers.test}
+
+Dependent Decision:
+${answers.decision}
+
+Pobot reflection:
+This assumption should not remain invisible. If an important decision depends on it, test it before optimising around it.`;
+  }
+
+  return quickResponses.fallback;
+}
+
+function detectPrivateQuestion(message) {
+  const privateTerms = [
+    "employer",
+    "client",
+    "company",
+    "career",
+    "cv",
+    "resume",
+    "visa",
+    "confidential",
+    "mclaren",
+    "philips",
+    "bmw",
+    "kiska",
+    "kohler"
+  ];
+
+  return privateTerms.some((term) => message.includes(term));
+}
+
+function getPobotResponse(input) {
+  const message = input.toLowerCase().trim();
+
+  if (!message) return quickResponses.fallback;
+
+  if (message === "reset" || message === "restart" || message === "clear") {
+    resetPobot();
+    return "Reset complete. Type “definition”, “audit”, or “assumption” to start again.";
+  }
+
+  if (message === "help" || message === "menu" || message === "options") {
+    return quickResponses.help;
+  }
+
+  if (detectPrivateQuestion(message)) {
+    return quickResponses.boundary;
+  }
+
+  if (pobotState.mode) {
+    return continueWorkflow(input);
+  }
+
+  if (
+    message.includes("definition") ||
+    message.includes("define") ||
+    message.includes("product canvas") ||
+    message.includes("what is this product")
+  ) {
+    return startWorkflow("definition");
+  }
+
+  if (
+    message.includes("audit") ||
+    message.includes("intent") ||
+    message.includes("behaviour") ||
+    message.includes("behavior") ||
+    message.includes("actual") ||
+    message.includes("supposed")
+  ) {
+    return startWorkflow("audit");
+  }
+
+  if (
+    message.includes("assumption") ||
+    message.includes("assume") ||
+    message.includes("we think") ||
+    message.includes("belief") ||
+    message.includes("guess")
+  ) {
+    return startWorkflow("assumption");
+  }
+
+  if (
+    message.includes("hello") ||
+    message.includes("hi") ||
+    message.includes("hey") ||
+    message.includes("start")
+  ) {
+    return quickResponses.greeting;
+  }
+
+  return quickResponses.fallback;
 }
 
 function sendMessage() {
@@ -150,7 +264,7 @@ function sendMessage() {
   setTimeout(() => {
     const botResponse = getPobotResponse(userMessage);
     addMessage(botResponse, "bot");
-  }, 300);
+  }, 250);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -165,5 +279,5 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  addMessage(getRandomResponse("greeting"), "bot");
+  addMessage(quickResponses.greeting, "bot");
 });
