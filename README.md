@@ -1,65 +1,51 @@
-# Pobot Chatbot
+# Pobot
 
-A simple, rule-based chatbot embedded in a GitHub Pages site.
+Pobot is a public-safe Product Experience Definition and Systems assistant.
 
-## Features
+It is designed to help think through complex product experience questions by focusing on:
 
-- 💬 Rule-based conversational chatbot
-- 🎨 Beautiful, responsive UI
-- 🚀 Embedded directly in the page
-- 📱 Mobile-friendly design
-- ⚡ Instant responses
+- Product definition
+- Assumptions
+- Constraints
+- Feedback
+- Evidence
+- Behaviour over intent
 
-## What Pobot Can Do
+## Current Status
 
-- Greet you with a friendly hello
-- Tell you about itself
-- Share jokes
-- Respond to common questions
-- Have a casual conversation
+This is a lightweight static alpha hosted on GitHub Pages.
 
-## Try It Out
+There is no backend, no API key, no OpenAI connection, and no private knowledge base.
 
-Visit [hellopowen.github.io](https://hellopowen.github.io) to chat with Pobot!
+## What Pobot Can Discuss
 
-## Files
+Pobot can discuss public-safe product experience reasoning, including:
 
-- `index.html` - Main HTML structure
-- `styles.css` - Styling and layout
-- `chatbot.js` - Chatbot logic and responses
-- `README.md` - This file
+- What a product is
+- What behaviour is intended
+- What assumptions are being made
+- What constraints shape behaviour
+- What evidence is available
+- Where actual behaviour differs from intent
 
-## How to Customize
+## What Pobot Does Not Discuss
 
-### Add New Responses
+Pobot should not discuss:
 
-Edit `chatbot.js` and add new categories to the `responses` object:
+- Confidential projects
+- Employer or client details
+- Private career history
+- Visa or evidence records
+- Unverified personal claims
 
-```javascript
-yourCategory: {
-    keywords: ['keyword1', 'keyword2', 'keyword3'],
-    responses: [
-        "Response 1",
-        "Response 2",
-        "Response 3"
-    ]
-}
-```
+## Alpha Purpose
 
-### Change the Appearance
+The purpose of this alpha is to test whether Pobot’s conversation style is useful before building a larger knowledge structure.
 
-Modify colors and styles in `styles.css`. The current color scheme uses purple gradients, but you can easily customize it!
+The core behaviour is:
 
-### Update the Title
-
-Change the title in `index.html` under the `<title>` tag and the chatbot header.
-
-## Future Enhancements
-
-- Add more conversation categories
-- Integrate with an API
-- Add user statistics
-- Save conversation history
-- Add more personality/emojis
-
-Enjoy! 🎉
+1. Define before optimising
+2. Identify assumptions
+3. Surface constraints
+4. Compare intent with actual behaviour
+5. Ask what evidence is available
