@@ -31,7 +31,7 @@ const workflows = {
   assumption: {
     title: "Assumption Extractor",
     steps: [
-      { key: "claim", question: "Write the belief or assumption you want to test. For example: “Users will understand this intuitively.”" },
+      { key: "claim", question: "Write the belief or assumption you want to test. Example: “Users will understand this intuitively.”" },
       { key: "basis", question: "What is this based on: evidence, experience, stakeholder belief, user research, or guess?" },
       { key: "risk", question: "What breaks if this assumption is wrong?" },
       { key: "test", question: "What is the smallest way to test or observe whether this assumption is true?" },
@@ -42,16 +42,16 @@ const workflows = {
 
 const quickResponses = {
   greeting:
-    "Hello, I’m Pobot. I help with product definition, assumptions, constraints, feedback, evidence, and intent-versus-behaviour gaps. Type “definition”, “audit”, or “assumption” to start.",
+    "Hello, I’m Pobot. I’m a guided product-thinking tool. Type “definition”, “audit”, or “assumption” to start.",
 
   help:
-    "Choose one workflow:\n\n1. Type “definition” for Product Definition Canvas\n2. Type “audit” for Intent vs Behaviour Audit\n3. Type “assumption” for Assumption Extractor\n\nYou can type “reset” anytime to start again.",
+    "Choose a workflow:\n\n• definition — clarify what the product is before optimising\n• audit — compare intended behaviour with actual behaviour\n• assumption — test a belief before building around it\n\nYou can type “reset” anytime.",
 
   boundary:
-    "I can’t discuss private career details, employer/client information, confidential projects, or unverified claims. I can help reformulate this as a public-safe product experience question.",
+    "I can’t discuss private career details, employer/client information, confidential projects, or unverified claims. Try reframing it as a product experience question.",
 
   fallback:
-    "I work best as a guided tool. Type “definition”, “audit”, or “assumption” to start. Type “help” to see options."
+    "I work best through guided workflows. Type “definition”, “audit”, or “assumption”."
 };
 
 function addMessage(text, sender) {
@@ -79,6 +79,35 @@ function startWorkflow(mode) {
   return `${workflow.title}\n\n${workflow.steps[0].question}`;
 }
 
+function isWorkflowCommand(message) {
+  return ["definition", "define", "audit", "assumption", "assume", "help", "menu", "reset", "restart", "clear"].includes(message);
+}
+
+function handleCommand(message) {
+  if (message === "reset" || message === "restart" || message === "clear") {
+    resetPobot();
+    return "Reset complete. Type “definition”, “audit”, or “assumption” to start again.";
+  }
+
+  if (message === "help" || message === "menu") {
+    return quickResponses.help;
+  }
+
+  if (message === "definition" || message === "define") {
+    return startWorkflow("definition");
+  }
+
+  if (message === "audit") {
+    return startWorkflow("audit");
+  }
+
+  if (message === "assumption" || message === "assume") {
+    return startWorkflow("assumption");
+  }
+
+  return null;
+}
+
 function continueWorkflow(userMessage) {
   const workflow = workflows[pobotState.mode];
   const currentStep = workflow.steps[pobotState.step];
@@ -87,7 +116,9 @@ function continueWorkflow(userMessage) {
   pobotState.step += 1;
 
   if (pobotState.step < workflow.steps.length) {
-    return workflow.steps[pobotState.step].question;
+    const nextNumber = pobotState.step + 1;
+    const total = workflow.steps.length;
+    return `Step ${nextNumber}/${total}\n\n${workflow.steps[pobotState.step].question}`;
   }
 
   const summary = generateSummary(pobotState.mode, pobotState.answers);
@@ -118,7 +149,7 @@ Success Evidence:
 ${answers.success}
 
 Pobot reflection:
-Before optimising this product, check whether the definition is coherent: product, user, problem, intended behaviour, constraints, and evidence should point in the same direction.`;
+Before optimising, check whether product, user, problem, intended behaviour, constraints, and evidence point in the same direction.`;
   }
 
   if (mode === "audit") {
@@ -140,7 +171,7 @@ Possible Cause:
 ${answers.cause}
 
 Pobot reflection:
-Users experience behaviour, not intent. The next useful question is: what would need to change in definition, feedback, constraint, or implementation for observed behaviour to match intended behaviour?`;
+Users experience behaviour, not intent. The next question is what needs to change so observed behaviour matches intended behaviour.`;
   }
 
   if (mode === "assumption") {
@@ -162,7 +193,7 @@ Dependent Decision:
 ${answers.decision}
 
 Pobot reflection:
-This assumption should not remain invisible. If an important decision depends on it, test it before optimising around it.`;
+If an important decision depends on this assumption, test it before optimising around it.`;
   }
 
   return quickResponses.fallback;
@@ -193,39 +224,43 @@ function getPobotResponse(input) {
 
   if (!message) return quickResponses.fallback;
 
-  if (message === "reset" || message === "restart" || message === "clear") {
-    resetPobot();
-    return "Reset complete. Type “definition”, “audit”, or “assumption” to start again.";
-  }
-
-  if (message === "help" || message === "menu" || message === "options") {
-    return quickResponses.help;
-  }
+  const commandResponse = handleCommand(message);
+  if (commandResponse) return commandResponse;
 
   if (detectPrivateQuestion(message)) {
     return quickResponses.boundary;
   }
 
   if (pobotState.mode) {
+    if (isWorkflowCommand(message)) {
+      return "You are already in a workflow. Type “reset” to stop, or answer the current question.";
+    }
     return continueWorkflow(input);
   }
 
   if (
-    message.includes("definition") ||
-    message.includes("define") ||
-    message.includes("product canvas") ||
-    message.includes("what is this product")
+    message.includes("what can you do") ||
+    message.includes("help") ||
+    message.includes("options")
+  ) {
+    return quickResponses.help;
+  }
+
+  if (
+    message.includes("what is this product") ||
+    message.includes("define this") ||
+    message.includes("product definition")
   ) {
     return startWorkflow("definition");
   }
 
   if (
-    message.includes("audit") ||
-    message.includes("intent") ||
+    message.includes("intended") ||
+    message.includes("actually") ||
     message.includes("behaviour") ||
     message.includes("behavior") ||
-    message.includes("actual") ||
-    message.includes("supposed")
+    message.includes("not working") ||
+    message.includes("confusing")
   ) {
     return startWorkflow("audit");
   }
@@ -234,7 +269,6 @@ function getPobotResponse(input) {
     message.includes("assumption") ||
     message.includes("assume") ||
     message.includes("we think") ||
-    message.includes("belief") ||
     message.includes("guess")
   ) {
     return startWorkflow("assumption");
